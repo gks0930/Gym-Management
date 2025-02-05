@@ -177,6 +177,7 @@ void makePayment() {
     system("cls");
     int memberId;
     double amount;
+    string memberName;
 
     while (true) {
         cout << "Enter Member ID: ";
@@ -194,6 +195,37 @@ void makePayment() {
         break;
     }
 
+    // Fetch member name from members.txt
+    ifstream memberFile("members.txt");
+    string line;
+    bool found = false;
+
+    if (memberFile.is_open()) {
+        while (getline(memberFile, line)) {
+            size_t pos1 = 0, pos2 = 0;
+
+            pos2 = line.find('|', pos1);
+            int existingId = stoi(line.substr(pos1, pos2 - pos1));
+
+            if (existingId == memberId) {
+                pos1 = pos2 + 1;
+                pos2 = line.find('|', pos1);
+                memberName = line.substr(pos1, pos2 - pos1);
+                found = true;
+                break;
+            }
+        }
+        memberFile.close();
+    } else {
+        cout << "Unable to open file!" << endl;
+        return;
+    }
+
+    if (!found) {
+        cout << "Member not found!" << endl;
+        return;
+    }
+
     while (true) {
         cout << "Enter Payment Amount: ";
         cin >> amount;
@@ -208,9 +240,9 @@ void makePayment() {
 
     ofstream paymentFile("payments.txt", ios::app);
     if (paymentFile.is_open()) {
-        paymentFile << memberId << "|" << amount << endl;
+        paymentFile << memberId << "|" << memberName << "|" << amount << endl;
         paymentFile.close();
-        cout << "Payment recorded successfully!" << endl;
+        cout << "Payment recorded successfully for " << memberName << " (ID: " << memberId << ")!" << endl;
     } else {
         cout << "Unable to open file!" << endl;
     }
@@ -222,18 +254,25 @@ void viewPayments() {
 
     if (paymentFile.is_open()) {
         while (getline(paymentFile, line)) {
-            size_t pos = line.find('|');
-            int memberId = stoi(line.substr(0, pos));
-            string amount = line.substr(pos + 1);
+            size_t pos1 = 0, pos2 = 0;
 
-            cout << "Member ID: " << memberId  << ", Amount: " << amount << endl;
+            pos2 = line.find('|', pos1);
+            int memberId = stoi(line.substr(pos1, pos2 - pos1));
+
+            pos1 = pos2 + 1;
+            pos2 = line.find('|', pos1);
+            string memberName = line.substr(pos1, pos2 - pos1);
+
+            pos1 = pos2 + 1;
+            string amount = line.substr(pos1);
+
+            cout << "Member ID: " << memberId << ", Name: " << memberName << ", Amount: " << amount << endl;
         }
         paymentFile.close();
     } else {
         cout << "Unable to open file!" << endl;
     }
 }
-
 int main() {
     int choice;
 
